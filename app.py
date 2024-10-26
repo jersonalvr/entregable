@@ -19,7 +19,6 @@ import requests
 from io import BytesIO
 import tempfile
 import zipfile
-#import win32com.client as win32
 import pythoncom  # Importación para manejar COM
 import shutil
 from contextlib import contextmanager  # Para crear un context manager
@@ -27,12 +26,13 @@ from docxtpl import DocxTemplate, InlineImage
 import logging
 import platform
 
+# Importaciones específicas de Windows
 if platform.system() == 'Windows':
     import win32com.client as win32
     import pythoncom
 else:
-    # Usar una alternativa para sistemas no-Windows
-    from docx2pdf import convert  # o cualquier otra alternativa
+    # No importar pythoncom en sistemas no-Windows
+    pass
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
