@@ -25,6 +25,14 @@ import shutil
 from contextlib import contextmanager  # Para crear un context manager
 from docxtpl import DocxTemplate, InlineImage
 import logging
+import platform
+
+if platform.system() == 'Windows':
+    import win32com.client as win32
+    import pythoncom
+else:
+    # Usar una alternativa para sistemas no-Windows
+    from docx2pdf import convert  # o cualquier otra alternativa
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -158,29 +166,22 @@ def convertir_a_pdf(archivo_docx, archivo_pdf):
             logging.error(f"El archivo {archivo_docx} no existe.")
             return
 
-        with com_handler():
-            # Inicializar la aplicación de Word
-            word = win32.Dispatch('Word.Application')
-            word.Visible = False
-            word.DisplayAlerts = 0
+        if platform.system() == 'Windows':
+            with com_handler():
+                word = win32.Dispatch('Word.Application')
+                word.Visible = False
+                word.DisplayAlerts = 0
+                doc = word.Documents.Open(os.path.abspath(archivo_docx))
+                time.sleep(2)
+                doc.SaveAs(os.path.abspath(archivo_pdf), FileFormat=17)
+                time.sleep(2)
+                doc.Close()
+                word.Quit()
+        else:
+            # Usar docx2pdf para sistemas no-Windows
+            convert(archivo_docx, archivo_pdf)
 
-            # Abrir el documento de Word
-            doc = word.Documents.Open(os.path.abspath(archivo_docx))
-            
-            # Agregar un pequeño retraso para asegurar que el documento se cargue completamente
-            time.sleep(2)
-
-            # Guardar como PDF
-            doc.SaveAs(os.path.abspath(archivo_pdf), FileFormat=17)
-            
-            # Agregar un pequeño retraso para asegurar que se complete el guardado
-            time.sleep(2)
-
-            # Cerrar el documento y la aplicación de Word
-            doc.Close()
-            word.Quit()
-
-            st.success(f"Documento convertido a PDF: {archivo_pdf}")
+        st.success(f"Documento convertido a PDF: {archivo_pdf}")
     except Exception as e:
         st.error(f"Error al convertir a PDF: {e}")
         logging.error(f"Error al convertir a PDF: {e}", exc_info=True)
@@ -1267,7 +1268,7 @@ def llenar_primera_tabla(doc, df_descripcion):
 
 def llenar_segunda_tabla(doc, df_total):
     if df_total is None or df_total.empty:
-        logging.error("Linea 1270: El DataFrame 'df_total' es None o está vacío.")
+        logging.error("Linea 1271: El DataFrame 'df_total' es None o está vacío.")
         return
 
     try:
@@ -1469,16 +1470,16 @@ def llenar_plantilla_word(
 
         # Verificar que los DataFrames no sean None
         if df_descripcion is None:
-            logging.error("Linea 1472: El DataFrame 'df_descripcion' es None.")
+            logging.error("Linea 1473: El DataFrame 'df_descripcion' es None.")
             return
         if df_total is None:
-            logging.error("Linea 1475: El DataFrame 'df_total' es None.")
+            logging.error("Linea 1476: El DataFrame 'df_total' es None.")
             return
         if df_especies is None:
-            logging.error("Linea 1478: El DataFrame 'df_especies' es None.")
+            logging.error("Linea 1479: El DataFrame 'df_especies' es None.")
             return
         if df_procedencia is None:
-            logging.error("Linea 1481: El DataFrame 'df_procedencia' es None.")
+            logging.error("Linea 1482: El DataFrame 'df_procedencia' es None.")
             return
 
         # Llenar las tablas y agregar imágenes
