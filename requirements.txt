@@ -14,3 +14,4 @@ requests-oauthlib==2.0.0
 streamlit==1.37.1
 streamlit_folium==0.22.0
 streamlit-option-menu==0.3.13
+pywin32; platform_system == "Windows"
