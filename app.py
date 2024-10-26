@@ -19,7 +19,7 @@ import requests
 from io import BytesIO
 import tempfile
 import zipfile
-import pythoncom  # Importación para manejar COM
+#import pythoncom  # Importación para manejar COM
 import shutil
 from contextlib import contextmanager  # Para crear un context manager
 from docxtpl import DocxTemplate, InlineImage
