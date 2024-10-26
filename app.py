@@ -25,7 +25,7 @@ from contextlib import contextmanager  # Para crear un context manager
 from docxtpl import DocxTemplate, InlineImage
 import logging
 import platform
-
+import subprocess
 # Importaciones específicas de Windows
 if platform.system() == 'Windows':
     import win32com.client as win32
@@ -178,8 +178,30 @@ def convertir_a_pdf(archivo_docx, archivo_pdf):
                 doc.Close()
                 word.Quit()
         else:
-            # Usar docx2pdf para sistemas no-Windows
-            convert(archivo_docx, archivo_pdf)
+            # Usar LibreOffice para la conversión en sistemas Linux
+            try:
+                # Intentar usar libreoffice
+                subprocess.run([
+                    'libreoffice', 
+                    '--headless', 
+                    '--convert-to', 
+                    'pdf', 
+                    archivo_docx,
+                    '--outdir', 
+                    os.path.dirname(archivo_pdf)
+                ], check=True)
+                
+                # Renombrar el archivo si es necesario
+                pdf_generado = os.path.splitext(archivo_docx)[0] + '.pdf'
+                if pdf_generado != archivo_pdf:
+                    os.rename(pdf_generado, archivo_pdf)
+                    
+            except subprocess.CalledProcessError:
+                st.error("Error al convertir el documento. Asegúrate de que LibreOffice esté instalado.")
+                return
+            except Exception as e:
+                st.error(f"Error inesperado durante la conversión: {str(e)}")
+                return
 
         st.success(f"Documento convertido a PDF: {archivo_pdf}")
     except Exception as e:
@@ -1268,7 +1290,7 @@ def llenar_primera_tabla(doc, df_descripcion):
 
 def llenar_segunda_tabla(doc, df_total):
     if df_total is None or df_total.empty:
-        logging.error("Linea 1271: El DataFrame 'df_total' es None o está vacío.")
+        logging.error("Linea 1293: El DataFrame 'df_total' es None o está vacío.")
         return
 
     try:
@@ -1470,16 +1492,16 @@ def llenar_plantilla_word(
 
         # Verificar que los DataFrames no sean None
         if df_descripcion is None:
-            logging.error("Linea 1473: El DataFrame 'df_descripcion' es None.")
+            logging.error("Linea 1495: El DataFrame 'df_descripcion' es None.")
             return
         if df_total is None:
-            logging.error("Linea 1476: El DataFrame 'df_total' es None.")
+            logging.error("Linea 1498: El DataFrame 'df_total' es None.")
             return
         if df_especies is None:
-            logging.error("Linea 1479: El DataFrame 'df_especies' es None.")
+            logging.error("Linea 1501: El DataFrame 'df_especies' es None.")
             return
         if df_procedencia is None:
-            logging.error("Linea 1482: El DataFrame 'df_procedencia' es None.")
+            logging.error("Linea 1504: El DataFrame 'df_procedencia' es None.")
             return
 
         # Llenar las tablas y agregar imágenes
