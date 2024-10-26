@@ -1,0 +1,159 @@
+{
+    "Amazonas": [
+      "Chachapoyas",
+      "Bagua",
+      "Bongará",
+      "Luya",
+      "Rodríguez de Mendoza"
+    ],
+    "Áncash": [
+      "Huaraz",
+      "Chimbote",
+      "Carhuaz",
+      "Recuay",
+      "Yungay"
+    ],
+    "Apurímac": [
+      "Abancay",
+      "Andahuaylas",
+      "Antabamba",
+      "Aymaraes"
+    ],
+    "Arequipa": [
+      "Arequipa",
+      "Caylloma",
+      "Camana",
+      "Mollendo",
+      "Paucarpata"
+    ],
+    "Ayacucho": [
+      "Ayacucho",
+      "Cangallo",
+      "Huamanga",
+      "Huanca Sancos"
+    ],
+    "Cajamarca": [
+      "Cajamarca",
+      "Jaén",
+      "Chota",
+      "Celendín",
+      "Contumazá"
+    ],
+    "Cusco": [
+      "Cusco",
+      "Sicuani",
+      "Urubamba",
+      "Espinar",
+      "La Convención"
+    ],
+    "Huancavelica": [
+      "Huancavelica",
+      "Angaraes",
+      "Castrovirreyna",
+      "Churcampa"
+    ],
+    "Huánuco": [
+      "Huánuco",
+      "Churubamba",
+      "Ambo",
+      "Lauricocha",
+      "Pachitea"
+    ],
+    "Ica": [
+      "Ica",
+      "Pisco",
+      "Nazca",
+      "Chincha Alta",
+      "Palpa"
+    ],
+    "Junín": [
+      "Huancayo",
+      "La Oroya",
+      "Jauja",
+      "Tarma",
+      "Chanchamayo"
+    ],
+    "La Libertad": [
+      "Trujillo",
+      "Chiclayo",
+      "Chepén",
+      "Santiago de Chuco",
+      "Virú"
+    ],
+    "Lambayeque": [
+      "Chiclayo",
+      "Lambayeque",
+      "Ferreñafe",
+      "Julcán"
+    ],
+    "Lima": [
+      "Lima",
+      "Callao",
+      "Villa El Salvador",
+      "Ate",
+      "San Juan de Lurigancho"
+    ],
+    "Loreto": [
+      "Iquitos",
+      "Nauta",
+      "Parinari",
+      "Requena",
+      "Tingo María"
+    ],
+    "Madre de Dios": [
+      "Puerto Maldonado",
+      "Manú",
+      "Tambopata"
+    ],
+    "Moquegua": [
+      "Moquegua",
+      "Mariscal Nieto",
+      "General Sánchez Cerro"
+    ],
+    "Pasco": [
+      "Cerro de Pasco",
+      "Oxapampa",
+      "Chaupimarca",
+      "Daniel Alcides Carrión"
+    ],
+    "Piura": [
+      "Piura",
+      "Sullana",
+      "Talara",
+      "Sechura",
+      "Catacaos"
+    ],
+    "Puno": [
+      "Puno",
+      "Ayaviri",
+      "Juli",
+      "Lampa",
+      "Moyobamba"
+    ],
+    "San Martín": [
+      "Tarapoto",
+      "Moyobamba",
+      "Bellavista",
+      "Picota",
+      "Huallaga"
+    ],
+    "Tacna": [
+      "Tacna",
+      "Jorge Basadre",
+      "Candarave"
+    ],
+    "Tumbes": [
+      "Tumbes",
+      "Zorritos",
+      "Corrales",
+      "Tocache"
+    ],
+    "Ucayali": [
+      "Pucallpa",
+      "Coronel Portillo",
+      "Atalaya",
+      "Padre Abad",
+      "Puerto Inca"
+    ]
+  }
+  
