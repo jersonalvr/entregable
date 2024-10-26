@@ -19,7 +19,7 @@ import requests
 from io import BytesIO
 import tempfile
 import zipfile
-import win32com.client as win32
+#import win32com.client as win32
 import pythoncom  # Importación para manejar COM
 import shutil
 from contextlib import contextmanager  # Para crear un context manager
