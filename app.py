@@ -413,7 +413,28 @@ def reemplazar_texto(doc, valores):
                                 if placeholder in run.text:
                                     run.text = run.text.replace(placeholder, str(value))
 
-# Función para generar el archivo data.xlsx
+def limpiar_valor(valor):
+    """
+    Limpia y convierte el valor según las siguientes reglas:
+    - Si el valor es 'S/R' (ignorando mayúsculas/minúsculas), devuelve 0.
+    - Si el valor es una cadena que contiene ',' o ';', reemplaza estos caracteres por '.' y convierte a float.
+    - Si el valor es numérico, lo devuelve como float.
+    - En cualquier otro caso, devuelve 0.
+    """
+    if isinstance(valor, str):
+        if valor.strip().upper() == "S/R":
+            return 0.0
+        # Reemplazar ',' y ';' por '.' y tratar de convertir a float
+        valor = valor.replace(",", ".").replace(";", ".")
+        try:
+            return float(valor)
+        except ValueError:
+            return 0.0
+    elif isinstance(valor, (int, float)):
+        return float(valor)
+    else:
+        return 0.0
+
 def generar_data_excel(excel_files, output_file):
     try:
         # Inicializar listas para almacenar datos de todas las hojas
@@ -459,12 +480,12 @@ def generar_data_excel(excel_files, output_file):
 
                 # Manejar el valor total
                 if pd.isna(total_value):
-                    total_value = 0
+                    total_value = 0.0
                 else:
                     try:
                         total_value = float(total_value)
                     except ValueError:
-                        total_value = 0
+                        total_value = 0.0
 
                 # Agregar los datos a la lista total_data
                 total_data.append(
@@ -525,19 +546,25 @@ def generar_data_excel(excel_files, output_file):
                 # Leer columnas adicionales de 'Tamaño' y 'Precio'
                 tamaño_columns = [15, 17, 19]  # P, R, T
                 tamaño_data = df.iloc[12:57, tamaño_columns]
-                tamaño_combined = tamaño_data.stack().groupby(level=0).mean()
+                
+                # Aplicar limpieza a las columnas de 'Tamaño'
+                tamaño_data_limpio = tamaño_data.applymap(limpiar_valor)
+                tamaño_combined = tamaño_data_limpio.stack().groupby(level=0).mean()
 
                 # Convertir 'tamaño_combined' a numérico y llenar NaN con 0
-                tamaño_combined = pd.to_numeric(tamaño_combined, errors="coerce").fillna(0)
+                tamaño_combined = pd.to_numeric(tamaño_combined, errors="coerce").fillna(0.0)
 
                 precio_columns = [16, 18, 20]  # Q, S, U
                 precio_data = df.iloc[12:57, precio_columns]
-
+                
+                # Aplicar limpieza a las columnas de 'Precio'
+                precio_data_limpio = precio_data.applymap(limpiar_valor)
+                
                 # Incluir 'Nombre común' antes de melt para mantener la asociación
                 nombre_comun = df.iloc[
                     12:57, 2
                 ].values  # Suponiendo que la columna 2 contiene 'Nombre común'
-                precio_data_with_nombre = precio_data.copy()
+                precio_data_with_nombre = precio_data_limpio.copy()
                 precio_data_with_nombre["Nombre común"] = nombre_comun
 
                 # Realizar el melt incluyendo 'Nombre común' como id_vars
@@ -569,9 +596,7 @@ def generar_data_excel(excel_files, output_file):
                         "Aparejo": df.iloc[12:57, 7],
                         "Hora": df.iloc[12:57, 14],
                         "Tamaño": tamaño_combined,
-                        "Precio": df.iloc[12:57, precio_columns].mean(
-                            axis=1
-                        ),  # Promedio para descripción
+                        "Precio": precio_data_limpio.mean(axis=1),  # Promedio para descripción
                         "Observación": "",
                     }
                 )
@@ -590,12 +615,12 @@ def generar_data_excel(excel_files, output_file):
                             "Fecha": [date],
                             "Nombre_común": ["N/A"],
                             "Nombre_científico": ["N/A"],
-                            "Volumen_Kg": [0],
+                            "Volumen_Kg": [0.0],
                             "Procedencia": ["N/A"],
                             "Aparejo": ["N/A"],
                             "Hora": ["N/A"],
-                            "Tamaño": [0],
-                            "Precio": [0],
+                            "Tamaño": [0.0],
+                            "Precio": [0.0],
                             "Observación": [observation],
                         }
                     )
@@ -655,9 +680,9 @@ def generar_data_excel(excel_files, output_file):
         def create_description(row):
             if (
                 row["Nombre_común"] == "N/A"
-                and row["Volumen_Kg"] == 0
-                and row["Tamaño"] == 0
-                and row["Precio"] == 0
+                and row["Volumen_Kg"] == 0.0
+                and row["Tamaño"] == 0.0
+                and row["Precio"] == 0.0
             ):
                 return row["Observación"]
             else:
@@ -710,13 +735,13 @@ def generar_data_excel(excel_files, output_file):
         # Convertir las columnas a numérico
         total_df["Pescado (KG)"] = pd.to_numeric(
             total_df["Pescado (KG)"], errors="coerce"
-        ).fillna(0)
+        ).fillna(0.0)
         total_df["Marisco (KG)"] = pd.to_numeric(
             total_df["Marisco (KG)"], errors="coerce"
-        ).fillna(0)
+        ).fillna(0.0)
         total_df["Total (KG)"] = pd.to_numeric(
             total_df["Total (KG)"], errors="coerce"
-        ).fillna(0)
+        ).fillna(0.0)
 
         # Formatear 'Fecha' para visualización
         total_df["Fecha"] = total_df["Fecha"].dt.strftime("%d/%m/%Y")
@@ -745,7 +770,7 @@ def generar_data_excel(excel_files, output_file):
             # Convertir a object para permitir strings
             total_df[col] = total_df[col].astype(object)
             # Crear máscara para filas que no sean 'TOTAL' y donde el valor sea 0
-            mask = (total_df["Fecha"] != "TOTAL") & (total_df[col] == 0)
+            mask = (total_df["Fecha"] != "TOTAL") & (total_df[col] == 0.0)
             # Asignar "–" donde la máscara es True
             total_df.loc[mask, col] = "–"
 
@@ -1292,7 +1317,7 @@ def llenar_primera_tabla(doc, df_descripcion):
 
 def llenar_segunda_tabla(doc, df_total):
     if df_total is None or df_total.empty:
-        logging.error("Linea 1293: El DataFrame 'df_total' es None o está vacío.")
+        logging.error("Linea 1320: El DataFrame 'df_total' es None o está vacío.")
         return
 
     try:
@@ -1494,16 +1519,16 @@ def llenar_plantilla_word(
 
         # Verificar que los DataFrames no sean None
         if df_descripcion is None:
-            logging.error("Linea 1495: El DataFrame 'df_descripcion' es None.")
+            logging.error("Linea 1522: El DataFrame 'df_descripcion' es None.")
             return
         if df_total is None:
-            logging.error("Linea 1498: El DataFrame 'df_total' es None.")
+            logging.error("Linea 1525: El DataFrame 'df_total' es None.")
             return
         if df_especies is None:
-            logging.error("Linea 1501: El DataFrame 'df_especies' es None.")
+            logging.error("Linea 1528: El DataFrame 'df_especies' es None.")
             return
         if df_procedencia is None:
-            logging.error("Linea 1504: El DataFrame 'df_procedencia' es None.")
+            logging.error("Linea 1531: El DataFrame 'df_procedencia' es None.")
             return
 
         # Llenar las tablas y agregar imágenes
