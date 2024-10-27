@@ -416,7 +416,7 @@ def reemplazar_texto(doc, valores):
 # Función para generar el archivo data.xlsx
 def generar_data_excel(excel_files, output_file):
     try:
-        # Listas para almacenar los datos de diferentes hojas
+        # Inicializar listas para almacenar datos de todas las hojas
         total_data = []
         comentarios_data = []
         grafico_data_list = []
@@ -431,174 +431,178 @@ def generar_data_excel(excel_files, output_file):
 
         # Bucle para procesar cada archivo Excel
         for file in excel_files:
-            # Leer el archivo Excel en un DataFrame
-            df = pd.read_excel(file, header=None)
+            # Leer todas las hojas del archivo Excel
+            xls = pd.ExcelFile(file, engine='openpyxl')
+            for sheet_name in xls.sheet_names:
+                df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
 
-            # Extraer datos específicos del archivo
-            date = df.iloc[7, 11]  # Fecha en L8 (0-based)
-            observation = df.iloc[12, 22]  # Observación en W13 (0-based)
-            total_value = df.iloc[11, 6]  # Total en G12 (0-based)
+                # Procesamiento similar al actual pero para cada hoja
+                # Asegúrate de que cada hoja tenga la estructura esperada
+                date = df.iloc[7, 11]  # Fecha en L8 (0-based)
+                observation = df.iloc[12, 22]  # Observación en W13 (0-based)
+                total_value = df.iloc[11, 6]  # Total en G12 (0-based)
 
-            # Obtener G13:G57 y X13:X57
-            G_values = df.iloc[12:57, 6]  # G13:G57
-            X_values = df.iloc[12:57, 23]  # X13:X57
+                # Obtener G13:G57 y X13:X57
+                G_values = df.iloc[12:57, 6]  # G13:G57
+                X_values = df.iloc[12:57, 23]  # X13:X57
 
-            # Crear un DataFrame para Pescados y Mariscos
-            total_items_df = pd.DataFrame({"G": G_values, "X": X_values})
+                # Crear un DataFrame para Pescados y Mariscos
+                total_items_df = pd.DataFrame({"G": G_values, "X": X_values})
 
-            # Sumar los valores para Pescados y Mariscos
-            sum_pescado = total_items_df.loc[
-                total_items_df["X"] == "PESCADOS", "G"
-            ].sum()
-            sum_marisco = total_items_df.loc[
-                total_items_df["X"] == "MARISCOS", "G"
-            ].sum()
+                # Sumar los valores para Pescados y Mariscos
+                sum_pescado = total_items_df.loc[
+                    total_items_df["X"] == "PESCADOS", "G"
+                ].sum()
+                sum_marisco = total_items_df.loc[
+                    total_items_df["X"] == "MARISCOS", "G"
+                ].sum()
 
-            # Manejar el valor total
-            if pd.isna(total_value):
-                total_value = 0
-            else:
-                try:
-                    total_value = float(total_value)
-                except ValueError:
+                # Manejar el valor total
+                if pd.isna(total_value):
                     total_value = 0
-
-            # Agregar los datos a la lista total_data
-            total_data.append(
-                {
-                    "Fecha": date,
-                    "Pescado (KG)": sum_pescado,
-                    "Marisco (KG)": sum_marisco,
-                    "Total (KG)": total_value,
-                }
-            )
-
-            # Agregar datos para la hoja 'grafico'
-            fecha_dt = (
-                pd.to_datetime(date, format="%d %m %Y", errors="coerce")
-                if pd.notna(date)
-                else pd.NaT
-            )
-            if pd.notna(fecha_dt):
-                dia = fecha_dt.day
-                mes_num = fecha_dt.month
-                mes_nombre = meses_espanol.get(mes_num, "Mes desconocido")
-                grafico_data_list.append(
-                    {"Día": dia, "Mes": mes_nombre, "Total_Kg": total_value}
-                )
-
-            # Obtener 'Primer Valor' y 'Último Valor' de 'Hora'
-            hora_col = df.iloc[12:57, 14]
-            primer_valor = df.iloc[12, 14]
-            primer_valor = "" if pd.isna(primer_valor) else primer_valor
-
-            # Encontrar el último valor no nulo en la columna 'Hora'
-            ultimo_valor = (
-                hora_col.dropna().iloc[-1]
-                if not hora_col.dropna().empty
-                else primer_valor
-            )
-
-            # Convertir 'primer_valor' y 'ultimo_valor' a formato 'HH:MM'
-            def format_hora(valor):
-                if isinstance(valor, pd.Timestamp):
-                    return valor.strftime("%H:%M")
-                elif isinstance(valor, str):
-                    try:
-                        return pd.to_datetime(valor).strftime("%H:%M")
-                    except ValueError:
-                        return valor
                 else:
-                    return valor
+                    try:
+                        total_value = float(total_value)
+                    except ValueError:
+                        total_value = 0
 
-            primer_valor_formateado = format_hora(primer_valor)
-            ultimo_valor_formateado = format_hora(ultimo_valor)
-
-            hora_range = f"{primer_valor_formateado} - {ultimo_valor_formateado}"
-
-            # Almacenar el 'Hora' range por 'Fecha'
-            hora_range_data[date] = hora_range
-
-            # Leer columnas adicionales de 'Tamaño' y 'Precio'
-            tamaño_columns = [15, 17, 19]  # P, R, T
-            tamaño_data = df.iloc[12:57, tamaño_columns]
-            tamaño_combined = tamaño_data.stack().groupby(level=0).mean()
-
-            # Convertir 'tamaño_combined' a numérico y llenar NaN con 0
-            tamaño_combined = pd.to_numeric(tamaño_combined, errors="coerce").fillna(0)
-
-            precio_columns = [16, 18, 20]  # Q, S, U
-            precio_data = df.iloc[12:57, precio_columns]
-
-            # Incluir 'Nombre común' antes de melt para mantener la asociación
-            nombre_comun = df.iloc[
-                12:57, 2
-            ].values  # Suponiendo que la columna 2 contiene 'Nombre común'
-            precio_data_with_nombre = precio_data.copy()
-            precio_data_with_nombre["Nombre común"] = nombre_comun
-
-            # Realizar el melt incluyendo 'Nombre común' como id_vars
-            precio_melted = precio_data_with_nombre.melt(
-                id_vars="Nombre común", value_vars=precio_columns, value_name="Precio"
-            )
-
-            # Convertir 'Precio' a numérico y filtrar valores > 0
-            precio_melted["Precio"] = pd.to_numeric(
-                precio_melted["Precio"], errors="coerce"
-            )
-            precio_melted = precio_melted.dropna(subset=["Precio"])
-            precio_melted = precio_melted[precio_melted["Precio"] > 0]
-
-            # Agregar los precios individuales a 'all_precios'
-            all_precios = pd.concat(
-                [all_precios, precio_melted[["Nombre común", "Precio"]]],
-                ignore_index=True,
-            )
-
-            # Crear DataFrame temporal para descripción
-            temp_df = pd.DataFrame(
-                {
-                    "Fecha": [date] * len(df.iloc[12:57, 2]),
-                    "Nombre_común": df.iloc[12:57, 2],
-                    "Nombre_científico": df.iloc[12:57, 3],
-                    "Volumen_Kg": df.iloc[12:57, 6],
-                    "Procedencia": df.iloc[12:57, 8],
-                    "Aparejo": df.iloc[12:57, 7],
-                    "Hora": df.iloc[12:57, 14],
-                    "Tamaño": tamaño_combined,
-                    "Precio": df.iloc[12:57, precio_columns].mean(
-                        axis=1
-                    ),  # Promedio para descripción
-                    "Observación": "",
-                }
-            )
-
-            temp_df = temp_df.dropna(
-                subset=["Nombre_común", "Volumen_Kg", "Hora"], how="all"
-            )
-
-            if not temp_df.empty:
-                temp_df.iloc[0, temp_df.columns.get_loc("Observación")] = observation
-                dfs_descripcion.append(temp_df)
-            elif pd.notna(observation):
-                # Manejar casos donde solo hay observación
-                observation_df = pd.DataFrame(
+                # Agregar los datos a la lista total_data
+                total_data.append(
                     {
-                        "Fecha": [date],
-                        "Nombre_común": ["N/A"],
-                        "Nombre_científico": ["N/A"],
-                        "Volumen_Kg": [0],
-                        "Procedencia": ["N/A"],
-                        "Aparejo": ["N/A"],
-                        "Hora": ["N/A"],
-                        "Tamaño": [0],
-                        "Precio": [0],
-                        "Observación": [observation],
+                        "Fecha": date,
+                        "Pescado (KG)": sum_pescado,
+                        "Marisco (KG)": sum_marisco,
+                        "Total (KG)": total_value,
                     }
                 )
-                dfs_descripcion.append(observation_df)
-                hora_range_data[date] = ""  # Sin rango de hora
 
+                # Agregar datos para la hoja 'grafico'
+                fecha_dt = (
+                    pd.to_datetime(date, format="%d %m %Y", errors="coerce")
+                    if pd.notna(date)
+                    else pd.NaT
+                )
+                if pd.notna(fecha_dt):
+                    dia = fecha_dt.day
+                    mes_num = fecha_dt.month
+                    mes_nombre = meses_espanol.get(mes_num, "Mes desconocido")
+                    grafico_data_list.append(
+                        {"Día": dia, "Mes": mes_nombre, "Total_Kg": total_value}
+                    )
+
+                # Obtener 'Primer Valor' y 'Último Valor' de 'Hora'
+                hora_col = df.iloc[12:57, 14]
+                primer_valor = df.iloc[12, 14]
+                primer_valor = "" if pd.isna(primer_valor) else primer_valor
+
+                # Encontrar el último valor no nulo en la columna 'Hora'
+                ultimo_valor = (
+                    hora_col.dropna().iloc[-1]
+                    if not hora_col.dropna().empty
+                    else primer_valor
+                )
+
+                # Convertir 'primer_valor' y 'ultimo_valor' a formato 'HH:MM'
+                def format_hora(valor):
+                    if isinstance(valor, pd.Timestamp):
+                        return valor.strftime("%H:%M")
+                    elif isinstance(valor, str):
+                        try:
+                            return pd.to_datetime(valor).strftime("%H:%M")
+                        except ValueError:
+                            return valor
+                    else:
+                        return valor
+
+                primer_valor_formateado = format_hora(primer_valor)
+                ultimo_valor_formateado = format_hora(ultimo_valor)
+
+                hora_range = f"{primer_valor_formateado} - {ultimo_valor_formateado}"
+
+                # Almacenar el 'Hora' range por 'Fecha'
+                hora_range_data[date] = hora_range
+
+                # Leer columnas adicionales de 'Tamaño' y 'Precio'
+                tamaño_columns = [15, 17, 19]  # P, R, T
+                tamaño_data = df.iloc[12:57, tamaño_columns]
+                tamaño_combined = tamaño_data.stack().groupby(level=0).mean()
+
+                # Convertir 'tamaño_combined' a numérico y llenar NaN con 0
+                tamaño_combined = pd.to_numeric(tamaño_combined, errors="coerce").fillna(0)
+
+                precio_columns = [16, 18, 20]  # Q, S, U
+                precio_data = df.iloc[12:57, precio_columns]
+
+                # Incluir 'Nombre común' antes de melt para mantener la asociación
+                nombre_comun = df.iloc[
+                    12:57, 2
+                ].values  # Suponiendo que la columna 2 contiene 'Nombre común'
+                precio_data_with_nombre = precio_data.copy()
+                precio_data_with_nombre["Nombre común"] = nombre_comun
+
+                # Realizar el melt incluyendo 'Nombre común' como id_vars
+                precio_melted = precio_data_with_nombre.melt(
+                    id_vars="Nombre común", value_vars=precio_columns, value_name="Precio"
+                )
+
+                # Convertir 'Precio' a numérico y filtrar valores > 0
+                precio_melted["Precio"] = pd.to_numeric(
+                    precio_melted["Precio"], errors="coerce"
+                )
+                precio_melted = precio_melted.dropna(subset=["Precio"])
+                precio_melted = precio_melted[precio_melted["Precio"] > 0]
+
+                # Agregar los precios individuales a 'all_precios'
+                all_precios = pd.concat(
+                    [all_precios, precio_melted[["Nombre común", "Precio"]]],
+                    ignore_index=True,
+                )
+
+                # Crear DataFrame temporal para descripción
+                temp_df = pd.DataFrame(
+                    {
+                        "Fecha": [date] * len(df.iloc[12:57, 2]),
+                        "Nombre_común": df.iloc[12:57, 2],
+                        "Nombre_científico": df.iloc[12:57, 3],
+                        "Volumen_Kg": df.iloc[12:57, 6],
+                        "Procedencia": df.iloc[12:57, 8],
+                        "Aparejo": df.iloc[12:57, 7],
+                        "Hora": df.iloc[12:57, 14],
+                        "Tamaño": tamaño_combined,
+                        "Precio": df.iloc[12:57, precio_columns].mean(
+                            axis=1
+                        ),  # Promedio para descripción
+                        "Observación": "",
+                    }
+                )
+
+                temp_df = temp_df.dropna(
+                    subset=["Nombre_común", "Volumen_Kg", "Hora"], how="all"
+                )
+
+                if not temp_df.empty:
+                    temp_df.iloc[0, temp_df.columns.get_loc("Observación")] = observation
+                    dfs_descripcion.append(temp_df)
+                elif pd.notna(observation):
+                    # Manejar casos donde solo hay observación
+                    observation_df = pd.DataFrame(
+                        {
+                            "Fecha": [date],
+                            "Nombre_común": ["N/A"],
+                            "Nombre_científico": ["N/A"],
+                            "Volumen_Kg": [0],
+                            "Procedencia": ["N/A"],
+                            "Aparejo": ["N/A"],
+                            "Hora": ["N/A"],
+                            "Tamaño": [0],
+                            "Precio": [0],
+                            "Observación": [observation],
+                        }
+                    )
+                    dfs_descripcion.append(observation_df)
+                    hora_range_data[date] = ""  # Sin rango de hora
+
+        # Continuar con el procesamiento como ya lo tienes
         if not dfs_descripcion:
             st.error("No se encontraron datos de descripción para procesar.")
             return
@@ -1137,8 +1141,6 @@ def generar_data_excel(excel_files, output_file):
             )
 
         # Total de G12
-        # Optimización: calcular total_sum_G12 sin re-abrir los archivos
-        # Extraer valores de 'total_data', asegurando que sean numéricos
         total_sum_G12 = sum(
             [
                 d["Total (KG)"] if isinstance(d["Total (KG)"], (int, float)) else 0
