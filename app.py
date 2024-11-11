@@ -1617,15 +1617,18 @@ def crear_donation_footer(base_dir):
         
         # Yape Tab
         with tab1:
+            st.subheader("Donar por Yape")
             col1, col2 = st.columns([1, 1])
             with col1:
-                st.subheader("Donar por Yape")
                 yape_image_path = os.path.join(base_dir, "yape.png")
                 if os.path.exists(yape_image_path):
                     st.image(yape_image_path, width=300)
                 else:
                     st.error(f"No se encontró la imagen en: {yape_image_path}")
-        
+            with col2:
+                # Agregamos el número de Yape con botón para copiar
+                st_copy_to_clipboard("964536063", "Copiar número de Yape")
+
         # Bank Deposits Tab
         with tab2:
             col1, col2 = st.columns([1, 1])
@@ -1670,10 +1673,18 @@ def crear_donation_footer(base_dir):
                 "45": "https://pago-seguro.vendemas.com.pe/MTgwMTYuNzQ1MzM0OTk0MzI4MTQ2MzYxNzMxMjgxNzYy"
             }
             
-            cols = st.columns(4)
-            for idx, (amount, link) in enumerate(amounts.items()):
-                with cols[idx % 4]:
-                    st.link_button(f"S/ {amount}", link)
+            # Creamos dos filas de 4 columnas cada una para mejor visualización
+            for row in range(2):
+                cols = st.columns(4)
+                start_idx = row * 4
+                end_idx = start_idx + 4
+                
+                # Tomamos solo los montos correspondientes a esta fila
+                row_amounts = dict(list(amounts.items())[start_idx:end_idx])
+                
+                for col_idx, (amount, link) in enumerate(row_amounts.items()):
+                    with cols[col_idx]:
+                        st.link_button(f"S/ {amount}", link)
             
             st.link_button("Más de S/ 50", "https://linkdecobro.ligo.live/v3/44df73097f594239b21b78b6905bed98")
         
