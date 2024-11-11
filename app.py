@@ -1319,7 +1319,7 @@ def llenar_primera_tabla(doc, df_descripcion):
 
 def llenar_segunda_tabla(doc, df_total):
     if df_total is None or df_total.empty:
-        logging.error("Linea 1320: El DataFrame 'df_total' es None o está vacío.")
+        logging.error("Linea 1322: El DataFrame 'df_total' es None o está vacío.")
         return
 
     try:
@@ -1521,16 +1521,16 @@ def llenar_plantilla_word(
 
         # Verificar que los DataFrames no sean None
         if df_descripcion is None:
-            logging.error("Linea 1522: El DataFrame 'df_descripcion' es None.")
+            logging.error("Linea 1524: El DataFrame 'df_descripcion' es None.")
             return
         if df_total is None:
-            logging.error("Linea 1525: El DataFrame 'df_total' es None.")
+            logging.error("Linea 1527: El DataFrame 'df_total' es None.")
             return
         if df_especies is None:
-            logging.error("Linea 1528: El DataFrame 'df_especies' es None.")
+            logging.error("Linea 1530: El DataFrame 'df_especies' es None.")
             return
         if df_procedencia is None:
-            logging.error("Linea 1531: El DataFrame 'df_procedencia' es None.")
+            logging.error("Linea 1533: El DataFrame 'df_procedencia' es None.")
             return
 
         # Llenar las tablas y agregar imágenes
