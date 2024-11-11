@@ -15,3 +15,5 @@ streamlit==1.37.1
 streamlit_folium==0.22.0
 streamlit-option-menu==0.3.13
 pywin32; platform_system == "Windows"
+pyperclip==1.9.0
+st_copy_to_clipboard==0.1.6
