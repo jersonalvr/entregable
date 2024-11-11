@@ -2287,7 +2287,6 @@ def main():
             except Exception as e:
                 st.error(f"Ocurrió un error durante el procesamiento: {e}")
                 st.exception(e)
-    st.markdown("---")
 
     crear_donation_footer(base_dir)
                 
